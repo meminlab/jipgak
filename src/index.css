@@ -1,0 +1,11 @@
+/* 임시 기본 스타일. 색·폰트·컴포넌트는 docs/design.md(디자인, BANB-63) 확정 후 반영. */
+:root {
+  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color: #111827;
+  background: #ffffff;
+  -webkit-text-size-adjust: 100%;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.app { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
+.notice { padding: 12px; border-radius: 8px; background: #fef3c7; color: #78350f; }
