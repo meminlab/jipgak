@@ -12,7 +12,8 @@ insert into auth.users (id, email) values
   ('22222222-2222-2222-2222-222222222222', 'b@test.local');
 
 insert into public.sigungu_codes (code, sido_name, sigungu_name, is_capital_area, is_collected)
-values ('11680', '서울특별시', '강남구', true, true);
+values ('11680', '서울특별시', '강남구', true, true)
+on conflict (code) do nothing;  -- 20261127000000 시드에 이미 있음
 
 insert into public.complexes (apt_seq, name, sigungu_code, umd_code, umd_name, bonbun, bubun)
 values ('11680-0001', '테스트단지', '11680', '10300', '개포동', 12, 0);
