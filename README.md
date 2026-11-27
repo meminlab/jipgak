@@ -2,6 +2,7 @@
 집각 — 실거래가 지도 + 내 종잣돈·대출로 살 수 있는 아파트 단지 관리
 
 - 명세: [`docs/spec-mvp.md`](docs/spec-mvp.md) (명세 기준 문서)
+- 디자인 기준: [`docs/design.md`](docs/design.md) (토큰은 `src/index.css`)
 - 스택: React + Vite PWA / Supabase (Postgres·Auth·Edge Functions) / Cloudflare Pages
 
 ## 실행
@@ -47,12 +48,24 @@ npx supabase stop
 ## 구조
 
 ```
-src/lib/supabase.ts         저장소 접근 단일 모듈 (화면은 여기만 사용)
+src/lib/repo.ts             저장소 접근 모음 (화면은 여기만 사용: 로그인·내 조건·policy_rules)
+src/lib/supabase.ts         Supabase 클라이언트 생성(anon 키)
+src/lib/calc/               계산 엔진(순수 함수): policy.ts 설정값 해석, engine.ts 대출·부대비용·필요 자금, notices.ts 안내 문구
+src/lib/profileForm.ts      내 조건 폼 ↔ user_profile 변환·검증(순수 함수)
 src/lib/env.ts              브라우저 노출 환경변수 읽기
 src/lib/money.ts            금액 표시(억·만원)
-supabase/migrations/        스키마 (명세 4절)
-supabase/tests/database/    pgTAP 스키마·RLS 테스트
+src/screens/                화면(로그인, 내 조건)
+src/components/ui.tsx       공통 UI 조각(금액 입력·세그먼트·토글·안내)
+supabase/migrations/        스키마(명세 4절) + policy_rules 초기값
+supabase/tests/database/    pgTAP 스키마·RLS·시드 테스트
 ```
+
+## 계산 엔진 (명세 5절)
+
+- 규제·세율 숫자는 코드에 두지 않고 `policy_rules`에서 읽습니다. 초기값은 `supabase/migrations/20261127000000_policy_rules_seed.sql`입니다.
+- 단위 테스트(`src/lib/calc/engine.test.ts`)는 QA 손계산 확정본 v1.1(BANB-64)의 케이스를 ID 그대로 재현합니다. 설정값은 시드 마이그레이션의 JSON을 그대로 읽으므로, 시드를 바꾸면 테스트가 바로 확인합니다.
+- 금액은 만원 정수로 받고 원 단위로 계산합니다. 비율은 bp 정수로 바꿔 계산해 부동소수 오차를 막습니다(DSR 역산만 부동소수, 만원 미만 절사).
+- 규제값을 바꿀 때: 기존 행에 `effective_to`를 넣고 새 시행일로 새 행을 추가하는 마이그레이션을 만듭니다. 엔진은 오늘 유효한 행만 씁니다.
 
 ## DB 설계 메모 (명세 4절)
 
