@@ -1,11 +1,109 @@
-/* 임시 기본 스타일. 색·폰트·컴포넌트는 docs/design.md(디자인, BANB-63) 확정 후 반영. */
+/* 디자인 기준: docs/design.md (BANB-63 시안 v1). 토큰 값은 시안 목업 :root 변수와 같다. */
 :root {
-  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  color: #111827;
-  background: #ffffff;
+  /* 색 — 집각 그린(살 각) + 웜 뉴트럴 */
+  --brand-700: #17614a; --brand-600: #1f7a5c; --brand-500: #2e9270; --brand-100: #d5eee3; --brand-50: #edf7f2;
+  --ink-900: #1a1d21; --ink-700: #3d434a; --ink-500: #6b7178; --ink-400: #9aa0a6; --ink-300: #cdd1d5; --ink-200: #e3e6e8; --ink-100: #f1f2f3;
+  --bg: #f6f7f4; --surface: #ffffff;
+  --short: #d9480f; --short-50: #fff1e8;
+  --up: #e03e3e; --down: #2b6cb0;
+  --warn: #9a6700; --warn-50: #fff7db;
+  --danger: #c92a2a; --danger-50: #fff0f0;
+  /* 간격 4 기반 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+  /* 라운드·그림자 */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-full: 999px;
+  --sh-card: 0 1px 2px rgba(20, 24, 28, 0.06), 0 0 0 1px rgba(20, 24, 28, 0.04);
+  --sh-float: 0 4px 14px rgba(20, 24, 28, 0.14);
+  --sh-sheet: 0 -6px 20px rgba(20, 24, 28, 0.1);
+
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color: var(--ink-900);
+  background: var(--bg);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
-* { box-sizing: border-box; }
-body { margin: 0; }
-.app { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
-.notice { padding: 12px; border-radius: 8px; background: #fef3c7; color: #78350f; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100dvh; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+
+/* ---------- 레이아웃 ---------- */
+.shell { max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+.shell-body { flex: 1; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+.screen { max-width: 480px; margin: 0 auto; padding: var(--s2) var(--s4) var(--s8); }
+.stack { display: flex; flex-direction: column; gap: var(--s4); }
+.card { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--sh-card); padding: var(--s4); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.appbar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) 0 var(--s3); }
+.appbar h1 { font-size: 22px; font-weight: 800; flex: 1; }
+.iconbtn { width: 44px; height: 44px; border-radius: var(--r-full); display: grid; place-items: center; background: transparent; border: 0; color: var(--ink-700); }
+.caption { font-size: 13px; color: var(--ink-500); font-weight: 500; }
+.intro { font-size: 14px; color: var(--ink-700); line-height: 1.5; }
+.loading { padding: var(--s8) var(--s4); text-align: center; color: var(--ink-500); font-size: 14px; }
+.notice { padding: 12px; border-radius: var(--r-sm); background: var(--warn-50); color: var(--warn); }
+
+/* ---------- 입력 ---------- */
+.field { display: flex; flex-direction: column; gap: 6px; border: 0; min-width: 0; }
+.field > label, .field > legend, .field-label { font-size: 13px; font-weight: 600; color: var(--ink-700); }
+.field > legend { margin-bottom: 6px; }
+.input { height: 48px; border-radius: var(--r-sm); border: 1px solid var(--ink-200); background: var(--surface); display: flex; align-items: center; padding: 0 14px; gap: 6px; }
+.input:focus-within { border-color: var(--brand-600); box-shadow: 0 0 0 3px var(--brand-50); }
+.input.invalid { border-color: var(--danger); }
+.input input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.input input::placeholder { color: var(--ink-400); font-weight: 500; }
+.login .input input { text-align: left; }
+.input .u { color: var(--ink-500); font-size: 14px; flex: none; }
+.input .inline-label { color: var(--ink-500); font-size: 14px; font-weight: 500; flex: none; }
+.help { font-size: 12px; color: var(--ink-500); font-weight: 500; min-height: 16px; font-variant-numeric: tabular-nums; }
+.help.error { color: var(--danger); }
+.static-value { height: 48px; display: flex; align-items: center; padding: 0 14px; border-radius: var(--r-sm); background: var(--ink-100); font-size: 15px; font-weight: 600; color: var(--ink-700); }
+
+.seg { display: flex; background: var(--ink-100); border-radius: var(--r-sm); padding: 3px; gap: 3px; }
+.seg button { flex: 1; height: 44px; border: 0; border-radius: 6px; background: transparent; font-size: 14px; font-weight: 600; color: var(--ink-500); }
+.seg button.on { background: var(--surface); color: var(--ink-900); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 44px; }
+.toggle-label { font-size: 16px; font-weight: 700; }
+.toggle-row.disabled .toggle-label { color: var(--ink-400); }
+.toggle { width: 52px; height: 32px; border-radius: 16px; border: 0; background: var(--ink-300); position: relative; flex: none; }
+.toggle::after { content: ''; position: absolute; width: 26px; height: 26px; border-radius: 50%; background: #fff; top: 3px; left: 3px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: left 0.15s; }
+.toggle.on { background: var(--brand-600); }
+.toggle.on::after { left: 23px; }
+.toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- 버튼 ---------- */
+.btn { height: 52px; border-radius: var(--r-md); border: 0; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; }
+.btn.primary { background: var(--brand-600); color: #fff; }
+.btn.primary:disabled { background: var(--brand-500); opacity: 0.7; cursor: progress; }
+.btn.secondary { background: var(--ink-100); color: var(--ink-900); }
+.btn.text { background: transparent; color: var(--ink-700); font-size: 14px; font-weight: 600; height: 44px; }
+
+/* ---------- 안내 ---------- */
+.disclaimer { display: flex; gap: 6px; font-size: 12px; line-height: 1.5; color: var(--ink-500); background: var(--ink-100); border-radius: var(--r-sm); padding: 10px 12px; }
+.disclaimer svg { flex: none; margin-top: 2px; }
+.banner { display: flex; gap: 10px; border-radius: var(--r-sm); padding: 12px; font-size: 13px; line-height: 1.5; }
+.banner b { display: block; font-size: 14px; }
+.banner svg { flex: none; margin-top: 1px; }
+.banner.danger { background: var(--danger-50); color: var(--danger); }
+.banner.ok { background: var(--brand-50); color: var(--brand-700); }
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: var(--s8) var(--s4); }
+.empty .ic { width: 48px; height: 48px; border-radius: 50%; background: var(--ink-100); display: grid; place-items: center; color: var(--ink-500); }
+.empty b { font-size: 15px; }
+.empty p { font-size: 13px; color: var(--ink-500); line-height: 1.5; }
+
+/* ---------- 탭바 ---------- */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto; height: calc(76px + env(safe-area-inset-bottom)); padding-bottom: calc(16px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--ink-200); display: flex; z-index: 5; }
+.tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--ink-400); background: transparent; border: 0; }
+.tabbar button.on { color: var(--brand-600); }
+
+/* ---------- 로그인 ---------- */
+.login { padding-top: 15dvh; }
+.login .brand { text-align: center; margin-bottom: var(--s6); }
+.login .brand h1 { font-size: 28px; font-weight: 800; color: var(--brand-600); }
+.login .brand p { font-size: 14px; color: var(--ink-500); margin-top: 6px; }
+
+@media (max-width: 360px) {
+  .seg button { font-size: 13px; }
+}
