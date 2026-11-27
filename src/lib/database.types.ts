@@ -1,4 +1,3 @@
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
@@ -239,8 +238,20 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "pack_archived_trade":
+            "archive_trades":
+{ Args: { "p_today"?: string }; Returns: Json
+                           },
+"ingest_trades":
+{ Args: { "p_rows": Json,"p_sigungu_code": string,"p_today"?: string }; Returns: Json
+                           },
+"log_ops_metric":
+{ Args: { "p_detail"?: Json,"p_error_count"?: number,"p_fetched_count"?: number,"p_job": string,"p_upserted_count"?: number }; Returns: number
+                           },
+"pack_archived_trade":
 { Args: { "p_contract_date": string,"p_floor": number,"p_is_cancelled": boolean,"p_is_direct": boolean,"p_price": number }; Returns: number
+                           },
+"refresh_area_type_summary":
+{ Args: { "p_area_type_ids": (number)[],"p_today"?: string }; Returns: number
                            }
           }
           Enums: {
