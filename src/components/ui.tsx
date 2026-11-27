@@ -41,7 +41,7 @@ interface MoneyFieldProps {
 export function MoneyField({ label, value, onChange, error, hint, placeholder, inlineLabel }: MoneyFieldProps) {
   const id = useId()
   const v = parseManwon(value)
-  const conversion = v === null ? null : `= ${formatManwon(v)}`
+  const conversion = v === null || Number.isNaN(v) ? null : `= ${formatManwon(v)}`
   return (
     <div className="field">
       {!inlineLabel && <label htmlFor={id}>{label}</label>}

@@ -28,7 +28,7 @@ const ROW: ProfileRow = {
 describe('금액 입력', () => {
   it('숫자만 남기고 천 단위 쉼표, 앞자리 0 제거', () => {
     expect(formatMoneyInput('50000')).toBe('50,000')
-    expect(formatMoneyInput('05,0000원')).toBe('50,000')
+    expect(formatMoneyInput('05,0000')).toBe('50,000')
     expect(formatMoneyInput('')).toBe('')
     expect(formatMoneyInput('0')).toBe('0')
   })
@@ -38,10 +38,27 @@ describe('금액 입력', () => {
   it('parseManwon', () => {
     expect(parseManwon('50,000')).toBe(50000)
     expect(parseManwon('')).toBeNull()
+    expect(parseManwon('1.5')).toBeNaN()
+    expect(parseManwon('-300')).toBeNaN()
   })
-  it('금리: 소수점 하나, 셋째 자리까지', () => {
+  it('D2: 소수점·음수·문자가 섞이면 다른 값으로 바꾸지 않고 그대로 둔다', () => {
+    expect(formatMoneyInput('1.5')).toBe('1.5')
+    expect(formatMoneyInput('-300')).toBe('-300')
+    expect(formatMoneyInput('5억')).toBe('5억')
+  })
+  it('D2: 정수가 아닌 금액은 저장을 막고 해당 필드에 문구', () => {
+    for (const bad of ['1.5', '-300', '5억']) {
+      const r = validateForm({ ...EMPTY_FORM, seedMoney: bad, annualIncome: bad })
+      expect(!r.ok && r.errors).toEqual({
+        seedMoney: '만원 단위 0 이상 정수로 입력해 주세요',
+        annualIncome: '만원 단위 0 이상 정수로 입력해 주세요',
+      })
+    }
+  })
+  it('금리 입력: 소수점 하나, 둘째 자리까지', () => {
     expect(formatRateInput('4.25')).toBe('4.25')
-    expect(formatRateInput('4..2567')).toBe('4.256')
+    expect(formatRateInput('4.125')).toBe('4.12')
+    expect(formatRateInput('4..2567')).toBe('4.25')
     expect(formatRateInput('a4%')).toBe('4')
   })
 })
@@ -84,12 +101,20 @@ describe('검증', () => {
       },
     })
   })
-  it('금리·만기 범위', () => {
-    const r = validateForm({ ...EMPTY_FORM, seedMoney: '1', interestRate: '0', loanTermYears: '51' })
-    expect(!r.ok && r.errors).toEqual({
-      interestRate: '0보다 크고 30 이하로 입력해 주세요',
-      loanTermYears: '1~50년으로 입력해 주세요',
-    })
+  it('D1: 금리 0.00~20.00%, 소수 둘째 자리까지 (기획 확정 Q15)', () => {
+    const rate = (t: string) => validateForm({ ...EMPTY_FORM, seedMoney: '1', interestRate: t })
+    for (const [t, v] of [['0', 0], ['0.00', 0], ['4.25', 4.25], ['20', 20], ['20.00', 20], ['3.', 3]] as const) {
+      const r = rate(t)
+      expect(r.ok && r.values.interest_rate).toBe(v)
+    }
+    for (const t of ['20.01', '20.5', '25', '4.125', '-1', '.5', 'abc']) {
+      const r = rate(t)
+      expect(!r.ok && r.errors.interestRate).toBe('0~20% 사이, 소수 둘째 자리까지 입력해 주세요')
+    }
+  })
+  it('만기 범위', () => {
+    const r = validateForm({ ...EMPTY_FORM, seedMoney: '1', loanTermYears: '51' })
+    expect(!r.ok && r.errors).toEqual({ loanTermYears: '1~50년으로 입력해 주세요' })
   })
   it('이사비 포함이면 금액 필수, 끄면 0으로 저장', () => {
     const on = validateForm({ ...EMPTY_FORM, seedMoney: '1', includeMovingCost: true })

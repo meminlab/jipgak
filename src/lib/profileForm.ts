@@ -53,24 +53,35 @@ export const EMPTY_FORM: ProfileForm = {
   movingCost: '',
 }
 
-/** 입력 중 금액 문자열 정리: 숫자만 남기고 천 단위 쉼표. "05,0000" → "50,000" */
+/** 금리 입력 범위(기획 확정 2026-11-27, BANB-64 Q15): 0.00~20.00%, 소수 둘째 자리까지 */
+export const MAX_RATE_PCT = 20
+
+/**
+ * 입력 중 금액 문자열 정리: 숫자·쉼표만 있으면 천 단위 쉼표로 다시 쓴다. "05,0000" → "50,000"
+ * 소수점·음수 부호·문자가 섞이면(붙여넣기 등) 바꾸지 않고 그대로 둔다 → 검증에서 저장을 막는다.
+ * 조용히 다른 값(1.5 → 15)으로 바꾸지 않기 위해서다.
+ */
 export function formatMoneyInput(raw: string): string {
-  const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 7)
+  const compact = raw.replace(/\s/g, '')
+  if (!/^[\d,]*$/.test(compact)) return raw.slice(0, 20)
+  const digits = compact.replace(/,/g, '').replace(/^0+(?=\d)/, '').slice(0, 7)
   return digits === '' ? '' : Number(digits).toLocaleString('ko-KR')
 }
 
-/** "50,000" → 50000, "" → null */
+/** "50,000" → 50000, "" → null, 정수가 아닌 값("1.5", "-300", "abc") → NaN */
 export function parseManwon(text: string): number | null {
-  const digits = text.replace(/[^\d]/g, '')
-  return digits === '' ? null : Number(digits)
+  const compact = text.replace(/\s/g, '')
+  if (compact === '') return null
+  if (!/^[\d,]+$/.test(compact)) return Number.NaN
+  return Number(compact.replace(/,/g, ''))
 }
 
-/** 금리 입력 정리: 숫자와 소수점 하나, 소수 셋째 자리까지(numeric(5,3)). */
+/** 금리 입력 정리: 숫자와 소수점 하나, 소수 둘째 자리까지. */
 export function formatRateInput(raw: string): string {
   const cleaned = raw.replace(/[^\d.]/g, '')
   const [int, ...rest] = cleaned.split('.')
   const intPart = int.slice(0, 2)
-  return rest.length === 0 ? intPart : `${intPart}.${rest.join('').slice(0, 3)}`
+  return rest.length === 0 ? intPart : `${intPart}.${rest.join('').slice(0, 2)}`
 }
 
 /** 주택 수 변경: 1주택 이상이면 생애최초 체크를 자동으로 푼다(Q10). */
@@ -106,6 +117,10 @@ export function validateForm(form: ProfileForm): ValidateResult {
       if (required) errors[field] = '금액을 입력해 주세요'
       return null
     }
+    if (Number.isNaN(v)) {
+      errors[field] = '만원 단위 0 이상 정수로 입력해 주세요'
+      return null
+    }
     if (v > MAX_MANWON) errors[field] = '999억 이하로 입력해 주세요'
     return v
   }
@@ -116,10 +131,14 @@ export function validateForm(form: ProfileForm): ValidateResult {
   const existingAnnualDebt = money('existingAnnualDebt', form.existingAnnualDebt, false) ?? 0
 
   let interestRate: number | null = null
-  if (form.interestRate.trim() !== '') {
-    const v = Number(form.interestRate)
-    if (!Number.isFinite(v) || v <= 0 || v > 30) errors.interestRate = '0보다 크고 30 이하로 입력해 주세요'
-    else interestRate = Math.round(v * 1000) / 1000
+  const rateText = form.interestRate.trim()
+  if (rateText !== '') {
+    const v = Number(rateText)
+    if (!/^\d{1,2}(\.\d{0,2})?$/.test(rateText) || !Number.isFinite(v) || v < 0 || v > MAX_RATE_PCT) {
+      errors.interestRate = '0~20% 사이, 소수 둘째 자리까지 입력해 주세요'
+    } else {
+      interestRate = v
+    }
   }
 
   const term = Number(form.loanTermYears)
